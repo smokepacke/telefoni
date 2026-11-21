@@ -1,0 +1,40 @@
+CREATE TABLE roles(
+  id_role SERIAL PRIMARY KEY,
+  name_role VARCHAR(50) NOT NULL,
+  access_lvl INTEGER NOT NULL
+ );
+CREATE TABLE users(
+  id_user SERIAL PRIMARY KEY,
+  id_role INTEGER NOT NULL REFERENCES roles(id_role),
+  login_user VARCHAR(100) NOT NULL,
+  pass_user VARCHAR(255) NOT NULL,
+  fam_user VARCHAR(100) NOT NULL,
+  name_user VARCHAR(100) NOT NULL,
+  otch_user VARCHAR(100) NOT NULL,
+  phone_user VARCHAR(20) NOT NULL,
+  email_user VARCHAR(100) NOT NULL
+ );
+CREATE TABLE empls(
+  id_empl SERIAL PRIMARY KEY,
+  job_title VARCHAR(100) NOT NULL,
+  fam_empl VARCHAR(100) NOT NULL,
+  name_empl VARCHAR(100) NOT NULL,
+  otch_empl VARCHAR(100) NOT NULL,
+  phone_empl VARCHAR(20) NOT NULL,
+  email_empl VARCHAR(100) NOT NULL
+);
+CREATE TABLE login_history(
+  id_login SERIAL PRIMARY KEY,
+  id_user INTEGER NOT NULL REFERENCES users(id_user),
+  id_empl INTEGER NOT NULL REFERENCES empls(id_empl),
+  login_date DATE NOT NULL,
+  login_time TIME NOT NULL,
+  login_ip VARCHAR(50) NOT NULL
+);
+CREATE TABLE purchases(
+  id_purchase SERIAL PRIMARY KEY,
+  id_user INTEGER NOT NULL REFERENCES users(id_user),
+  amount_purchase INTEGER NOT NULL,
+  quantity_purchase INTEGER NOT NULL,
+  date_purchase DATE NOT NULL
+);

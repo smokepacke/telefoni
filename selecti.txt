@@ -1,0 +1,221 @@
+SELECT
+    u.login_user,
+    u.fam_user,
+    u.name_user,
+    r.name_role,
+    r.access_lvl
+FROM users u, roles r
+WHERE u.id_role = r.id_role
+ORDER BY r.access_lvl DESC;
+
+Вывод:
+PAHAN	Nikitin	Gordey	Admin	3
+klykodiver	Torsukov	Leontiy	Moderator	2
+pacan4ik	Sokolov	Alexey	Customer	1
+
+SELECT
+    u.login_user,
+    e.fam_empl,
+    e.job_title,
+    l.login_date,
+    l.login_time,
+    l.login_ip
+FROM login_history l
+JOIN users u ON l.id_user = u.id_user
+LEFT JOIN empls e ON l.id_empl = e.id_empl
+ORDER BY l.login_date DESC;
+
+Вывод:
+
+pacan4ik			2026-11-13	15:31:11	192.213.1.12
+PAHAN			2026-10-31	13:45:23	192.281.1.10
+klykodiver			2026-10-30	12:41:11	192.218.1.11
+
+SELECT
+    COUNT(*) AS total_purchases,
+    SUM(amount_purchase) AS total_amount,
+    AVG(amount_purchase) AS average_amount,
+    MAX(amount_purchase) AS max_amount,
+    MIN(amount_purchase) AS min_amount
+FROM purchases;
+
+3	664994	221664.666666666667	351998	130999
+
+SELECT
+    u.login_user,
+    SUM(p.amount_purchase) AS total_amount,
+    COUNT(p.id_purchase) AS purchases_count
+FROM users u
+JOIN purchases p ON u.id_user = p.id_user
+GROUP BY u.id_user, u.login_user
+HAVING SUM(p.amount_purchase) > 150000;
+
+pacan4ik	181997	1
+klykodiver	351998	1
+
+SELECT
+    login_user,
+    fam_user,
+    name_user
+FROM users
+WHERE id_user IN (
+    SELECT id_user
+    FROM purchases
+);
+
+Вывод:
+
+pacan4ik	Sokolov	Alexey
+klykodiver	Torsukov	Leontiy
+PAHAN	Nikitin	Gordey
+
+SELECT
+    p.id_purchase,
+    u.login_user,
+    p.amount_purchase
+FROM purchases p
+JOIN users u ON p.id_user = u.id_user
+WHERE p.amount_purchase > ALL (
+    SELECT p2.amount_purchase
+    FROM purchases p2
+    WHERE p2.id_user <> p.id_user
+);
+
+Вывод:
+
+14	klykodiver	351998
+
+SELECT
+    id_purchase,
+    amount_purchase,
+    CASE
+        WHEN amount_purchase >= 300000 THEN 'Крупная покупка'
+        WHEN amount_purchase >= 150000 THEN 'Средняя покупка'
+        ELSE 'Маленькая покупка'
+    END AS purchase_category
+FROM purchases;
+
+Вывод:
+
+13	130999	Маленькая покупка
+14	351998	Крупная покупка
+15	181997	Средняя покупка
+
+CREATE VIEW user_purchase_statistics AS
+SELECT
+    u.id_user,
+    u.login_user,
+    u.fam_user,
+    COUNT(p.id_purchase) AS purchases_count,
+    COALESCE(SUM(p.amount_purchase), 0) AS total_amount
+FROM users u
+LEFT JOIN purchases p ON u.id_user = p.id_user
+GROUP BY u.id_user, u.login_user, u.fam_user;
+
+
+SELECT *
+FROM user_purchase_statistics
+ORDER BY total_amount DESC;
+
+Вывод:
+
+2	klykodiver	Torsukov	1	351998
+3	pacan4ik	Sokolov	1	181997
+1	PAHAN	Nikitin	1	130999
+
+WITH user_totals AS (
+    SELECT
+        id_user,
+        SUM(amount_purchase) AS total_amount
+    FROM purchases
+    GROUP BY id_user
+)
+SELECT
+    u.login_user,
+    u.fam_user,
+    ut.total_amount
+FROM users u
+JOIN user_totals ut ON u.id_user = ut.id_user
+WHERE ut.total_amount > 150000;
+
+Вывод:
+
+klykodiver	Torsukov	351998
+pacan4ik	Sokolov	181997
+
+
+EXPLAIN ANALYZE
+SELECT
+    u.login_user,
+    SUM(p.amount_purchase) AS total_amount
+FROM users u
+JOIN purchases p ON u.id_user = p.id_user
+GROUP BY u.id_user, u.login_user;
+
+Выввод:
+
+HashAggregate  (cost=50.95..51.35 rows=40 width=230) (actual time=0.034..0.035 rows=3.00 loops=1)
+  Group Key: u.id_user
+  Batches: 1  Memory Usage: 32kB
+  Buffers: shared hit=2
+  ->  Hash Join  (cost=10.90..42.45 rows=1700 width=226) (actual time=0.029..0.031 rows=3.00 loops=1)
+        Hash Cond: (p.id_user = u.id_user)
+        Buffers: shared hit=2
+        ->  Seq Scan on purchases p  (cost=0.00..27.00 rows=1700 width=8) (actual time=0.016..0.016 rows=3.00 loops=1)
+              Buffers: shared hit=1
+        ->  Hash  (cost=10.40..10.40 rows=40 width=222) (actual time=0.010..0.010 rows=3.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+              Buffers: shared hit=1
+              ->  Seq Scan on users u  (cost=0.00..10.40 rows=40 width=222) (actual time=0.007..0.008 rows=3.00 loops=1)
+                    Buffers: shared hit=1
+Planning Time: 0.119 ms
+Execution Time: 0.067 ms
+
+
+Индексы для ускорения поиска:
+
+CREATE INDEX idx_purchases_user
+ON purchases(id_user);
+
+CREATE INDEX idx_login_history_user
+ON login_history(id_user);
+
+Транзакции:
+
+START TRANSACTION;
+
+INSERT INTO purchases (
+    id_user,
+    amount_purchase,
+    quantity_purchase,
+    date_purchase
+)
+VALUES (
+    1,
+    200000,
+    2,
+    CURRENT_DATE
+);
+
+SELECT *
+FROM purchases
+WHERE id_user = 1;
+
+ROLLBACK;
+
+припейр екзекют деллокейт:
+
+PREPARE get_user_purchases (INTEGER) AS
+SELECT
+    id_purchase,
+    amount_purchase,
+    quantity_purchase,
+    date_purchase
+FROM purchases
+WHERE id_user = $1
+ORDER BY date_purchase DESC;
+
+EXECUTE get_user_purchases(2);
+
+DEALLOCATE get_user_purchases;
+

@@ -1,0 +1,28 @@
+INSERT INTO roles (name_role, access_lvl) VALUES
+('Admin', 3),
+('Moderator', 2),
+('Customer', 1);
+
+INSERT INTO empls
+(job_title, fam_empl, name_empl, otch_empl, phone_empl, email_empl) VALUES
+('manager', 'Koptelov', 'Oleg', 'Igorevich', '+79123121212', 'oleg@gmail.com'),
+('support', 'Stepanov', 'Viktor', 'Stanislavovich', '+79123121311', 'viktor@gmail.com'),
+('support specialist', 'Barbashin', 'Konstantin', 'Pavlovich', '+71231111111', 'kostyan@gmail.com');
+
+INSERT INTO users
+(id_role, login_user, pass_user, fam_user, name_user, otch_user, phone_user, email_user) VALUES
+(1, 'PAHAN', 'pass111', 'Nikitin', 'Gordey', 'Pavlovich', '+79518217161', 'pahan99@gmail.com'),
+(2, 'klykodiver', 'pass222', 'Torsukov', 'Leontiy', 'Sergeevich', '+79317518161', '3k3k@gmail.com'),
+(3, 'pacan4ik', 'pass333', 'Sokolov', 'Alexey', 'Alexandrovich', '+79831625241', '606051leha@gmail.com');
+
+INSERT INTO login_history
+(id_user, id_empl, login_date, login_time, login_ip) VALUES
+(1, NULL, '2026-10-31', '13:45:23', '192.281.1.10'),
+(2, NULL, '2026-10-30', '12:41:11', '192.218.1.11'),
+(3, NULL, '2026-11-13', '15:31:11', '192.213.1.12');
+
+INSERT INTO purchases
+(id_user, amount_purchase, quantity_purchase, date_purchase) VALUES
+(1, 130999, 1, '2026-11-01'),
+(2, 351998, 2, '2026-11-02'),
+(3, 181997, 3, '2026-11-03');
